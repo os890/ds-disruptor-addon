@@ -18,53 +18,127 @@
  */
 package org.os890.ds.addon.async.event.impl;
 
+import org.apache.deltaspike.core.api.literal.DefaultLiteral;
+import org.apache.deltaspike.core.util.metadata.builder.ImmutableInjectionPoint;
+import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 import org.os890.ds.addon.async.event.api.ObservesAsynchronous;
 
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.Extension;
-import javax.enterprise.inject.spi.ProcessBean;
+import javax.enterprise.inject.Default;
+import javax.enterprise.inject.spi.*;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public class DisruptorExtension implements Extension
 {
     private List<DisruptorObserverEntry> disruptorObserverEntries = new ArrayList<DisruptorObserverEntry>();
 
-    protected void collectDisruptorConfig(@Observes ProcessBean pb, BeanManager beanManager)
+    private Set<Annotation> defaultQualifier = new HashSet<Annotation>() {{
+        add(new DefaultLiteral());
+    }};
+
+    protected void collectDisruptorConfig(@Observes ProcessBean<?> pb, BeanManager beanManager)
     {
-        for (Method method : pb.getBean().getBeanClass().getDeclaredMethods() /*TODO getMethods*/)
+        List<Method> foundMethods = new ArrayList<Method>(); //fallback
+        Collections.addAll(foundMethods, pb.getBean().getBeanClass().getDeclaredMethods());
+
+        reduceInjectionPointQualifiers(pb);
+        
+        if (pb.getAnnotated() instanceof AnnotatedType)
+        {
+            foundMethods.clear();
+            for (AnnotatedMethod annotatedMethod : ((AnnotatedType<?>) pb.getAnnotated()).getMethods())
+            {
+
+                foundMethods.add(annotatedMethod.getJavaMember());
+            }
+        }
+
+        for (Method method : foundMethods)
         {
             if (method.getParameterTypes().length == 1) //currently optional injection-points aren't supported
             {
+                List<Annotation> qualifiers = new ArrayList<Annotation>();
                 ObservesAsynchronous observesAsynchronous = null;
 
                 for (Annotation annotation : method.getParameterAnnotations()[0])
                 {
                     if (annotation.annotationType().equals(ObservesAsynchronous.class))
                     {
-                        observesAsynchronous = (ObservesAsynchronous)annotation;
+                        observesAsynchronous = (ObservesAsynchronous) annotation;
+                    }
+                    else if (beanManager.isQualifier(annotation.annotationType()))
+                    {
+                        qualifiers.add(annotation);
                     }
                 }
 
                 if (observesAsynchronous != null)
                 {
+                    if (!method.isAccessible())
+                    {
+                        method.setAccessible(true);
+                    }
                     Class eventClass = method.getParameterTypes()[0];
-                    disruptorObserverEntries.add(new DisruptorObserverEntry(eventClass, pb.getBean(), method, beanManager));
-                    break; //TODO currently we just support one observer per class
+                    if (qualifiers.isEmpty())
+                    {
+                        qualifiers.add(new DefaultLiteral());
+                    }
+                    int eventClassAndQualifierHashCode = new BeanCacheKey(eventClass, qualifiers.toArray(new Annotation[qualifiers.size()])).hashCode();
+                    disruptorObserverEntries.add(new DisruptorObserverEntry(beanManager, pb.getBean(), method, eventClassAndQualifierHashCode));
                 }
             }
         }
     }
 
-    public List<DisruptorObserverEntry> getDisruptorObserver(Class eventClass)
+    private void reduceInjectionPointQualifiers(ProcessBean<?> pb)
+    {
+        Iterator<InjectionPoint> injectionPointIterator = pb.getBean().getInjectionPoints().iterator();
+
+        List<InjectionPoint> injectionPointsToRecreate = new ArrayList<InjectionPoint>();
+        while (injectionPointIterator.hasNext())
+        {
+            InjectionPoint injectionPoint = injectionPointIterator.next();
+            if (injectionPoint.getMember() instanceof Field && injectionPoint.getAnnotated() instanceof AnnotatedField &&
+                AsynchronousEvent.class.isAssignableFrom(((Field)injectionPoint.getMember()).getType()))
+            {
+                if (injectionPoint.getQualifiers().size() != 1 ||
+                    !Default.class.isAssignableFrom(injectionPoint.getQualifiers().iterator().next().annotationType()))
+                {
+                    if (injectionPoint.getQualifiers().size() > 0)
+                    {
+                        injectionPointsToRecreate.add(injectionPoint);
+                        injectionPointIterator.remove();
+                    }
+                }
+            }
+        }
+
+        for (InjectionPoint injectionPoint : injectionPointsToRecreate)
+        {
+            InjectionPoint recreatedInjectionPoint = new ImmutableInjectionPoint(
+                (AnnotatedField)injectionPoint.getAnnotated(),
+                this.defaultQualifier, //the default producer will handle the qualifier logic
+                injectionPoint.getBean(),
+                injectionPoint.isTransient(),
+                injectionPoint.isDelegate());
+            pb.getBean().getInjectionPoints().add(recreatedInjectionPoint);
+        }
+    }
+
+    public List<DisruptorObserverEntry> getDisruptorObserver(Integer eventClassAndQualifierHashCode)
     {
         List<DisruptorObserverEntry> result = new ArrayList<DisruptorObserverEntry>();
         for (DisruptorObserverEntry entry : this.disruptorObserverEntries)
         {
-            if (entry.getEventClass().equals(eventClass))
+            if (entry.isEntryFor(eventClassAndQualifierHashCode))
             {
                 result.add(entry);
             }

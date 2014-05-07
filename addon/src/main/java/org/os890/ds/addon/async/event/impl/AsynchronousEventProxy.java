@@ -20,34 +20,57 @@ package org.os890.ds.addon.async.event.impl;
 
 import com.lmax.disruptor.RingBuffer;
 import org.apache.deltaspike.cdise.api.ContextControl;
+import org.apache.deltaspike.core.api.literal.DefaultLiteral;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 import org.os890.ds.addon.async.event.api.config.AsynchronousEventConfig;
 
+import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
 class AsynchronousEventProxy implements AsynchronousEvent, Serializable
 {
-    private final Class eventClass;
-    private transient DisruptorEntry disruptorEntry;
+    private static final long serialVersionUID = -3759644415170905068L;
 
-    AsynchronousEventProxy(InjectionPoint injectionPoint,
-                           DisruptorBroadcaster disruptorBroadcaster /*don't store it - it isn't a contextual reference*/)
+    private final int eventClassAndQualifierHashCode;
+    private transient RingBufferHolder ringBufferHolder;
+
+    AsynchronousEventProxy(BeanManager beanManager,
+                           InjectionPoint injectionPoint,
+                           AsynchronousEventProducer asynchronousEventProducer /*don't store it - it isn't a contextual reference*/)
     {
         if (injectionPoint.getMember() instanceof Field)
         {
-            this.eventClass = (Class)((ParameterizedType)((Field)injectionPoint.getMember()).getGenericType()).getActualTypeArguments()[0];
+            Class eventClass = (Class) ((ParameterizedType) ((Field) injectionPoint.getMember()).getGenericType()).getActualTypeArguments()[0];
+
+            //don't use injectionPoint.getQualifiers() since we removed them during the bootstrapping
+            List<Annotation> qualifiers = new ArrayList<Annotation>();
+            for (Annotation annotation : ((Field)injectionPoint.getMember()).getAnnotations())
+            {
+                if (beanManager.isQualifier(annotation.annotationType()))
+                {
+                    qualifiers.add(annotation);
+                }
+            }
+
+            if (qualifiers.isEmpty())
+            {
+                qualifiers.add(new DefaultLiteral());
+            }
+            eventClassAndQualifierHashCode = new BeanCacheKey(eventClass, qualifiers.toArray(new Annotation[qualifiers.size()])).hashCode();
         }
         else
         {
             throw new IllegalStateException("currently events are only supported via field-injection"); //TODO add more details about the usage
         }
-        init(disruptorBroadcaster);
+        init(asynchronousEventProducer);
     }
 
     @Override
@@ -55,7 +78,7 @@ class AsynchronousEventProxy implements AsynchronousEvent, Serializable
     {
         init(null);
 
-        RingBuffer<DisruptorEventSlot> ringBuffer = disruptorEntry.getRingBuffer();
+        RingBuffer<DisruptorEventSlot> ringBuffer = ringBufferHolder.getRingBuffer();
         long sequence = ringBuffer.next();
         try
         {
@@ -68,52 +91,53 @@ class AsynchronousEventProxy implements AsynchronousEvent, Serializable
         }
     }
 
-    private void init(DisruptorBroadcaster disruptorBroadcaster)
+    private void init(AsynchronousEventProducer asynchronousEventProducer)
     {
-        if (this.disruptorEntry == null)
+        if (this.ringBufferHolder == null)
         {
-            lazyInit(disruptorBroadcaster);
+            lazyInit(asynchronousEventProducer);
         }
     }
 
-    private synchronized void lazyInit(DisruptorBroadcaster disruptorBroadcaster)
+    private synchronized void lazyInit(AsynchronousEventProducer asynchronousEventProducer)
     {
-        if (this.disruptorEntry != null)
+        if (this.ringBufferHolder != null)
         {
             return;
         }
 
-        if (disruptorBroadcaster == null)
+        if (asynchronousEventProducer == null)
         {
-            disruptorBroadcaster = BeanProvider.getContextualReference(DisruptorBroadcaster.class);
+            asynchronousEventProducer = BeanProvider.getContextualReference(AsynchronousEventProducer.class);
         }
-        ConcurrentMap<Class, DisruptorEntry> disruptorEntries = disruptorBroadcaster.getDisruptorEntries();
-        List<DisruptorObserverEntry> disruptorObserverEntries = disruptorBroadcaster.getDisruptorExtension().getDisruptorObserver(this.eventClass);
-        ContextControl contextControl = disruptorBroadcaster.getContextControl();
-        this.disruptorEntry = disruptorEntries.get(this.eventClass);
+        ConcurrentMap<Integer, RingBufferHolder> disruptorEntries = asynchronousEventProducer.getDisruptorEntries();
+        List<DisruptorObserverEntry> disruptorObserverEntries = asynchronousEventProducer.getDisruptorExtension().getDisruptorObserver(this.eventClassAndQualifierHashCode);
+        ContextControl contextControl = asynchronousEventProducer.getContextControl();
+        this.ringBufferHolder = disruptorEntries.get(this.eventClassAndQualifierHashCode);
 
-        if(disruptorEntry == null)
+        if (ringBufferHolder == null)
         {
             AsynchronousEventConfig config = BeanProvider.getContextualReference(AsynchronousEventConfig.class);
 
-            SlotEventHandler<DisruptorEventSlot>[] slotEventHandler = new SlotEventHandler[disruptorObserverEntries.size()];
+            SlotEventHandler<DisruptorEventSlot>[] slotEventHandlers = new SlotEventHandler[disruptorObserverEntries.size()];
 
             for (int i = 0; i < disruptorObserverEntries.size(); i++)
             {
-                slotEventHandler[i] = new SlotEventHandler(disruptorObserverEntries.get(i));
+                slotEventHandlers[i] = new SlotEventHandler(disruptorObserverEntries.get(i));
             }
 
-            disruptorEntry = new DisruptorEntry(
+            ringBufferHolder = new RingBufferHolder(
                     config.getExecutor(),
                     config.getRingBufferSize(),
                     config.getProducerType(),
                     config.getWaitStrategy(),
-                    contextControl, slotEventHandler);
+                    contextControl,
+                    slotEventHandlers);
             //TODO init
-            DisruptorEntry existingDisruptorEntry = disruptorEntries.putIfAbsent(this.eventClass, disruptorEntry);
-            if (existingDisruptorEntry != null)
+            RingBufferHolder existingRingBufferHolder = disruptorEntries.putIfAbsent(this.eventClassAndQualifierHashCode, ringBufferHolder);
+            if (existingRingBufferHolder != null)
             {
-                disruptorEntry = existingDisruptorEntry;
+                ringBufferHolder = existingRingBufferHolder;
             }
         }
     }

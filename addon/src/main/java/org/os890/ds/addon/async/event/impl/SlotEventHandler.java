@@ -20,11 +20,11 @@ package org.os890.ds.addon.async.event.impl;
 
 import com.lmax.disruptor.EventHandler;
 
-public class SlotEventHandler<E> implements EventHandler<DisruptorEventSlot<E>>
+class SlotEventHandler<E> implements EventHandler<DisruptorEventSlot<E>>
 {
     private final DisruptorObserverEntry disruptorObserverEntry;
 
-    public SlotEventHandler(DisruptorObserverEntry disruptorObserverEntry)
+    SlotEventHandler(DisruptorObserverEntry disruptorObserverEntry)
     {
         this.disruptorObserverEntry = disruptorObserverEntry;
     }

@@ -20,44 +20,66 @@ package org.os890.ds.addon.async.event.impl;
 
 import org.apache.deltaspike.core.util.ExceptionUtils;
 
-import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import java.lang.reflect.Method;
 
-public class DisruptorObserverEntry<T> {
-    private final Class<T> eventClass;
+class DisruptorObserverEntry<T>
+{
+    private final int eventClassAndQualifierHashCode;
     private final Bean<?> bean;
     private final Method observerMethod;
     private final BeanManager beanManager;
+    private final Object observerContextualReference;
 
-    public DisruptorObserverEntry(Class<T> eventClass, Bean<?> bean, Method observerMethod, BeanManager beanManager)
+    DisruptorObserverEntry(BeanManager beanManager,
+                           Bean<?> bean,
+                           Method observerMethod,
+                           int eventClassAndQualifierHashCode)
     {
-        this.eventClass = eventClass;
-        this.bean = bean;
         this.observerMethod = observerMethod;
         this.beanManager = beanManager;
+        this.eventClassAndQualifierHashCode = eventClassAndQualifierHashCode;
+
+        if (beanManager.isNormalScope(bean.getScope()))
+        {
+            this.observerContextualReference = beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(bean));
+            this.bean = null;
+        }
+        else
+        {
+            this.observerContextualReference = null;
+            this.bean = bean;
+        }
     }
 
-    public Class getEventClass()
-    {
-        return eventClass;
-    }
-
-    public void dispatch(T event)
+    void dispatch(T event)
     {
         //TODO alternative handling
         //TODO cache it
-        CreationalContext<?> creationalContext = beanManager.createCreationalContext(bean);
 
-        Object observerContextualInstance = beanManager.getReference(bean, bean.getBeanClass(), creationalContext);
+        final Object currentObserverContextualReference;
+        if (observerContextualReference != null)
+        {
+            currentObserverContextualReference = observerContextualReference;
+        }
+        else
+        {
+            currentObserverContextualReference = beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(bean));
+        }
+
         try
         {
-            observerMethod.invoke(observerContextualInstance, event);
+            observerMethod.invoke(currentObserverContextualReference, event);
         }
         catch (Exception e)
         {
             throw ExceptionUtils.throwAsRuntimeException(e);
         }
+    }
+
+    public boolean isEntryFor(int hashCode)
+    {
+        return this.eventClassAndQualifierHashCode == hashCode;
     }
 }

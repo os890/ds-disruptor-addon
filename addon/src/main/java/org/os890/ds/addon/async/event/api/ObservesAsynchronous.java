@@ -30,5 +30,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface ObservesAsynchronous
 {
-    //TODO add barrier support
 }

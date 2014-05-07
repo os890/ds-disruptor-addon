@@ -18,16 +18,16 @@
  */
 package org.os890.ds.addon.async.event.impl;
 
-public class DisruptorEventSlot<E>
+class DisruptorEventSlot<E>
 {
     private E event;
 
-    public E getEvent()
+    E getEvent()
     {
         return event;
     }
 
-    public void setEvent(E event)
+    void setEvent(E event)
     {
         this.event = event;
     }

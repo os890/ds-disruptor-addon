@@ -27,7 +27,7 @@ import javax.enterprise.context.SessionScoped;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 //based on BatchEventProcessor
-public class CdiAwareEventProcessor<E> implements EventProcessor
+class CdiAwareEventProcessor<E> implements EventProcessor
 {
     private final ContextControl contextControl;
     private final RingBuffer<DisruptorEventSlot<E>> ringBuffer;
@@ -37,10 +37,10 @@ public class CdiAwareEventProcessor<E> implements EventProcessor
     private final Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
     private final AtomicBoolean running = new AtomicBoolean(false);
 
-    public CdiAwareEventProcessor(ContextControl contextControl,
-                                  RingBuffer<DisruptorEventSlot<E>> ringBuffer,
-                                  EventHandler<DisruptorEventSlot<E>> eventHandler,
-                                  SequenceBarrier barrier)
+    CdiAwareEventProcessor(ContextControl contextControl,
+                           RingBuffer<DisruptorEventSlot<E>> ringBuffer,
+                           EventHandler<DisruptorEventSlot<E>> eventHandler,
+                           SequenceBarrier barrier)
     {
         this.contextControl = contextControl;
         this.ringBuffer = ringBuffer;
@@ -68,7 +68,8 @@ public class CdiAwareEventProcessor<E> implements EventProcessor
     }
 
     @Override
-    public void run() {
+    public void run()
+    {
         try
         {
             contextControl.startContext(RequestScoped.class);
@@ -140,7 +141,7 @@ public class CdiAwareEventProcessor<E> implements EventProcessor
         {
             try
             {
-                ((LifecycleAware)eventHandler).onStart();
+                ((LifecycleAware) eventHandler).onStart();
             }
             catch (final Throwable ex)
             {
@@ -156,7 +157,7 @@ public class CdiAwareEventProcessor<E> implements EventProcessor
         {
             try
             {
-                ((LifecycleAware)eventHandler).onShutdown();
+                ((LifecycleAware) eventHandler).onShutdown();
             }
             catch (final Throwable ex)
             {

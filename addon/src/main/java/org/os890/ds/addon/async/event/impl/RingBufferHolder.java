@@ -25,26 +25,27 @@ import org.apache.deltaspike.cdise.api.ContextControl;
 
 import java.util.concurrent.Executor;
 
-public class DisruptorEntry<E>
+class RingBufferHolder<E>
 {
     private final RingBuffer<DisruptorEventSlot<E>> ringBuffer;
 
-    public DisruptorEntry(Executor executor,
-                          Integer bufferSize,
-                          ProducerType producerType,
-                          WaitStrategy waitStrategy,
-                          ContextControl contextControl,
-                          SlotEventHandler<DisruptorEventSlot<E>>... eventHandlers)
+    RingBufferHolder(Executor executor,
+                     Integer bufferSize,
+                     ProducerType producerType,
+                     WaitStrategy waitStrategy,
+                     ContextControl contextControl,
+                     SlotEventHandler<DisruptorEventSlot<E>>... eventHandlers)
     {
-        Disruptor<DisruptorEventSlot<E>> disruptor = new Disruptor<DisruptorEventSlot<E>>(new EventFactory<DisruptorEventSlot<E>>() {
+        Disruptor<DisruptorEventSlot<E>> disruptor = new Disruptor<DisruptorEventSlot<E>>(new EventFactory<DisruptorEventSlot<E>>()
+        {
             @Override
-            public DisruptorEventSlot<E> newInstance() {
+            public DisruptorEventSlot<E> newInstance()
+            {
                 return new DisruptorEventSlot<E>();
             }
         }, bufferSize, executor, producerType, waitStrategy);
         EventProcessor[] eventProcessors = new EventProcessor[eventHandlers.length];
-        final Sequence[] barrierSequences = new Sequence[0]; //TODO ordinals for ordering observers
-        final SequenceBarrier barrier = disruptor.getRingBuffer().newBarrier(barrierSequences);
+        final SequenceBarrier barrier = disruptor.getRingBuffer().newBarrier();
 
         for (int i = 0; i < eventHandlers.length; i++)
         {
@@ -63,7 +64,7 @@ public class DisruptorEntry<E>
         return new CdiAwareEventProcessor(contextControl, disruptor.getRingBuffer(), eventHandler, barrier);
     }
 
-    public RingBuffer<DisruptorEventSlot<E>> getRingBuffer()
+    RingBuffer<DisruptorEventSlot<E>> getRingBuffer()
     {
         return ringBuffer;
     }

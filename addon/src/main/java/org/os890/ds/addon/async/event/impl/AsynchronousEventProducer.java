@@ -24,31 +24,35 @@ import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.inject.Inject;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @ApplicationScoped
-public class DisruptorBroadcaster
+public class AsynchronousEventProducer
 {
+    @Inject
+    private BeanManager beanManager;
+
     @Inject
     private DisruptorExtension disruptorExtension;
 
     @Inject
     private ContextControl contextControl;
 
-    private ConcurrentMap<Class /*TODO DisruptorKey for Qualifiers*/, DisruptorEntry> disruptorEntries = new ConcurrentHashMap<Class, DisruptorEntry>();
+    private ConcurrentMap<Integer /*event-class/qualifier hash-code*/, RingBufferHolder> disruptorEntries = new ConcurrentHashMap<Integer, RingBufferHolder>();
 
     @Produces
     @Dependent
     protected AsynchronousEvent produceEventProxy(InjectionPoint injectionPoint)
     {
-        return new AsynchronousEventProxy(injectionPoint,
+        return new AsynchronousEventProxy(beanManager, injectionPoint,
             this /*just to avoid an additional lookup - we need a ref. to an application-scoped storage for disruptorEntries in any case*/);
     }
 
-    public ConcurrentMap<Class, DisruptorEntry> getDisruptorEntries()
+    public ConcurrentMap<Integer, RingBufferHolder> getDisruptorEntries()
     {
         return disruptorEntries;
     }
