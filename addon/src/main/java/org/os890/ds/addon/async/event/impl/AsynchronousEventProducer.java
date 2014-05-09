@@ -23,6 +23,7 @@ import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
+import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
@@ -30,7 +31,7 @@ import javax.inject.Inject;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-@ApplicationScoped
+@RequestScoped
 public class AsynchronousEventProducer
 {
     @Inject
@@ -46,23 +47,23 @@ public class AsynchronousEventProducer
 
     @Produces
     @Dependent
-    protected AsynchronousEvent produceEventProxy(InjectionPoint injectionPoint)
+    protected AsynchronousEvent eventProxy(InjectionPoint injectionPoint)
     {
         return new AsynchronousEventProxy(beanManager, injectionPoint,
             this /*just to avoid an additional lookup - we need a ref. to an application-scoped storage for disruptorEntries in any case*/);
     }
 
-    public ConcurrentMap<Integer, RingBufferHolder> getDisruptorEntries()
+    ConcurrentMap<Integer, RingBufferHolder> getDisruptorEntries()
     {
         return disruptorEntries;
     }
 
-    public DisruptorExtension getDisruptorExtension()
+    DisruptorExtension getDisruptorExtension()
     {
         return disruptorExtension;
     }
 
-    public ContextControl getContextControl()
+    ContextControl getContextControl()
     {
         return contextControl;
     }

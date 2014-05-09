@@ -16,11 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.ds.addon.async.event.api;
+package org.os890.ee.observer.async.disruptor;
 
-import java.io.Serializable;
+import org.os890.ds.addon.async.event.api.ObservesAsynchronous;
 
-public interface AsynchronousEvent<E> extends Serializable
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class DisruptorBasedEventObserver1
 {
-    void fire(E event);
+    public void onEvent1(@ObservesAsynchronous DemoDisruptorEvent event)
+    {
+        event.touch1();
+    }
 }

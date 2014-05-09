@@ -24,7 +24,7 @@
     <packaging>jar</packaging>
 
     <groupId>org.os890.ds.addon</groupId>
-    <artifactId>ds-async-events-addon</artifactId>
+    <artifactId>ds-async-event-addon</artifactId>
 
     <name>DS-AsyncEvents Add-on</name>
     <version>1.0.0</version>

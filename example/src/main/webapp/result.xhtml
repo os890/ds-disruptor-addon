@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ds="http://deltaspike.apache.org/jsf">
+<h:head>
+    <title>Event Overview</title>
+</h:head>
+<h:body>
+    <h:form>
+        <h:panelGrid columns="2">
+            <h:outputLabel value="event-count:" for="eventCount"/>
+            <h:inputText id="eventCount" value="#{eventDispatcher.eventCount}"/>
+        </h:panelGrid>
+        <h2>execution times</h2>
+        <table>
+            <tr>
+                <td>std cdi observer</td>
+                <td>disruptor based observer</td>
+                <td>async observer with stateful ejb</td>
+                <td>async observer with stateless ejb</td>
+            </tr>
+            <tr>
+                <td>#{eventDispatcher.cdiEventResult} ms</td>
+                <td>#{eventDispatcher.asyncDisruptorBasedEventResult} ms</td>
+                <td>#{eventDispatcher.statefulEjbEventResult} ms</td>
+                <td>#{eventDispatcher.statelessEjbEventResult} ms</td>
+            </tr>
+            <tr>
+                <td>
+                    <h:commandButton value="run" action="#{eventDispatcher.sendStdCdiEvent}"/>
+                </td>
+                <td>
+                    <h:commandButton value="run" action="#{eventDispatcher.sendViaAsyncEvent}"/>
+                </td>
+                <td>
+                    <h:commandButton value="run" action="#{eventDispatcher.sendAsyncEventToStatefulEjb}"/>
+                </td>
+                <td>
+                    <h:commandButton value="run" action="#{eventDispatcher.sendAsyncEventToStatelessEjb}"/>
+                </td>
+            </tr>
+        </table>
+        <ds:windowId/>
+    </h:form>
+</h:body>
+</html>

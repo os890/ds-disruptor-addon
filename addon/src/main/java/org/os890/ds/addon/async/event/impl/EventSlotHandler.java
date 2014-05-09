@@ -16,11 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.ds.addon.async.event.api;
+package org.os890.ds.addon.async.event.impl;
 
-import java.io.Serializable;
+import com.lmax.disruptor.EventHandler;
 
-public interface AsynchronousEvent<E> extends Serializable
+/**
+ * Bridges disruptor event to observer-method
+ */
+class EventSlotHandler<E> implements EventHandler<EventSlot<E>>
 {
-    void fire(E event);
+    private final ObserverEntry<E> observerEntry;
+
+    EventSlotHandler(ObserverEntry<E> observerEntry)
+    {
+        this.observerEntry = observerEntry;
+    }
+
+    @Override
+    public void onEvent(EventSlot<E> event, long sequence, boolean endOfBatch) throws Exception
+    {
+        observerEntry.dispatch(event.getEvent());
+    }
 }

@@ -30,22 +30,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class CdiAwareEventProcessor<E> implements EventProcessor
 {
     private final ContextControl contextControl;
-    private final RingBuffer<DisruptorEventSlot<E>> ringBuffer;
-    private final EventHandler<DisruptorEventSlot<E>> eventHandler;
+    private final RingBuffer<EventSlot<E>> ringBuffer;
+    private final EventHandler<EventSlot<E>> eventHandler;
     private final SequenceBarrier barrier;
 
     private final Sequence sequence = new Sequence(Sequencer.INITIAL_CURSOR_VALUE);
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private final boolean weldDetected;
 
     CdiAwareEventProcessor(ContextControl contextControl,
-                           RingBuffer<DisruptorEventSlot<E>> ringBuffer,
-                           EventHandler<DisruptorEventSlot<E>> eventHandler,
+                           RingBuffer<EventSlot<E>> ringBuffer,
+                           EventHandler<EventSlot<E>> eventHandler,
                            SequenceBarrier barrier)
     {
         this.contextControl = contextControl;
         this.ringBuffer = ringBuffer;
         this.eventHandler = eventHandler;
         this.barrier = barrier;
+        this.weldDetected = contextControl.getClass().getName().contains(".weld.");
     }
 
     @Override
@@ -72,6 +74,11 @@ class CdiAwareEventProcessor<E> implements EventProcessor
     {
         try
         {
+            if (weldDetected)
+            {
+                contextControl.stopContext(RequestScoped.class);
+                contextControl.stopContext(SessionScoped.class);
+            }
             contextControl.startContext(RequestScoped.class);
             contextControl.startContext(SessionScoped.class);
 
@@ -83,7 +90,7 @@ class CdiAwareEventProcessor<E> implements EventProcessor
 
             notifyStart();
 
-            DisruptorEventSlot<E> event;
+            EventSlot<E> event;
             long nextSequence = sequence.get() + 1L;
             try
             {
@@ -104,6 +111,7 @@ class CdiAwareEventProcessor<E> implements EventProcessor
                     }
                     catch (final TimeoutException e)
                     {
+                        e.printStackTrace();
                         //TODO ds-exception handling
                         throw ExceptionUtils.throwAsRuntimeException(e);
                     }
@@ -116,6 +124,8 @@ class CdiAwareEventProcessor<E> implements EventProcessor
                     }
                     catch (final Throwable ex)
                     {
+                        ex.printStackTrace();
+
                         //TODO DS exception handling
                         sequence.set(nextSequence);
                         nextSequence++;
@@ -145,6 +155,7 @@ class CdiAwareEventProcessor<E> implements EventProcessor
             }
             catch (final Throwable ex)
             {
+                ex.printStackTrace();
                 //TODO ds-exception handling
                 throw ExceptionUtils.throwAsRuntimeException(ex);
             }
@@ -161,6 +172,7 @@ class CdiAwareEventProcessor<E> implements EventProcessor
             }
             catch (final Throwable ex)
             {
+                ex.printStackTrace();
                 //TODO ds-exception handling
                 throw ExceptionUtils.throwAsRuntimeException(ex);
             }

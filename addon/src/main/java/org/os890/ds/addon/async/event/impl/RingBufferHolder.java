@@ -27,21 +27,21 @@ import java.util.concurrent.Executor;
 
 class RingBufferHolder<E>
 {
-    private final RingBuffer<DisruptorEventSlot<E>> ringBuffer;
+    private final RingBuffer<EventSlot<E>> ringBuffer;
 
     RingBufferHolder(Executor executor,
                      Integer bufferSize,
                      ProducerType producerType,
                      WaitStrategy waitStrategy,
                      ContextControl contextControl,
-                     SlotEventHandler<DisruptorEventSlot<E>>... eventHandlers)
+                     EventSlotHandler<EventSlot<E>>... eventHandlers)
     {
-        Disruptor<DisruptorEventSlot<E>> disruptor = new Disruptor<DisruptorEventSlot<E>>(new EventFactory<DisruptorEventSlot<E>>()
+        Disruptor<EventSlot<E>> disruptor = new Disruptor<EventSlot<E>>(new EventFactory<EventSlot<E>>()
         {
             @Override
-            public DisruptorEventSlot<E> newInstance()
+            public EventSlot<E> newInstance()
             {
-                return new DisruptorEventSlot<E>();
+                return new EventSlot<E>();
             }
         }, bufferSize, executor, producerType, waitStrategy);
         EventProcessor[] eventProcessors = new EventProcessor[eventHandlers.length];
@@ -49,22 +49,22 @@ class RingBufferHolder<E>
 
         for (int i = 0; i < eventHandlers.length; i++)
         {
-            SlotEventHandler<DisruptorEventSlot<E>> eventHandler = eventHandlers[i];
+            EventSlotHandler<EventSlot<E>> eventHandler = eventHandlers[i];
             eventProcessors[i] = createEventProcessor(disruptor, contextControl, eventHandler, barrier);
         }
         disruptor.handleEventsWith(eventProcessors);
         ringBuffer = disruptor.start();
     }
 
-    private EventProcessor createEventProcessor(final Disruptor<DisruptorEventSlot<E>> disruptor,
+    private EventProcessor createEventProcessor(final Disruptor<EventSlot<E>> disruptor,
                                                 final ContextControl contextControl,
-                                                final SlotEventHandler<DisruptorEventSlot<E>> eventHandler,
+                                                final EventSlotHandler<EventSlot<E>> eventHandler,
                                                 final SequenceBarrier barrier)
     {
         return new CdiAwareEventProcessor(contextControl, disruptor.getRingBuffer(), eventHandler, barrier);
     }
 
-    RingBuffer<DisruptorEventSlot<E>> getRingBuffer()
+    RingBuffer<EventSlot<E>> getRingBuffer()
     {
         return ringBuffer;
     }

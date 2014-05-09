@@ -54,7 +54,7 @@ public class SimpleBenchmarkTest
     {
         double disruptorEventProcessingTime = nativeDisruptorBroadcast();
 
-        final double expectedMax = disruptorEventProcessingTime * 1.2;
+        final double expectedMax = disruptorEventProcessingTime * 1.05;
         double observerProcessingTime = asyncObserverBroadcast();
 
         String logMessage = ">>> native execution time: " + disruptorEventProcessingTime + "ms and observer execution time: " + observerProcessingTime + "ms";
@@ -145,8 +145,14 @@ public class SimpleBenchmarkTest
     {
         long seq = ringBuffer.next();
 
-        EventSlot<TestEvent> slot = ringBuffer.get(seq);
-        slot.setEvent(disruptorEvent);
-        ringBuffer.publish(seq);
+        try
+        {
+            EventSlot<TestEvent> slot = ringBuffer.get(seq);
+            slot.setEvent(disruptorEvent);
+        }
+        finally //approach required by disruptor
+        {
+            ringBuffer.publish(seq);
+        }
     }
 }

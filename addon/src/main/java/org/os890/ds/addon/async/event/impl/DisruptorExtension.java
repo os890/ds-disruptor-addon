@@ -22,6 +22,7 @@ import org.apache.deltaspike.core.api.literal.DefaultLiteral;
 import org.apache.deltaspike.core.util.metadata.builder.ImmutableInjectionPoint;
 import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 import org.os890.ds.addon.async.event.api.ObservesAsynchronous;
+import org.os890.ds.addon.async.event.impl.util.BeanCacheKey;
 
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
@@ -38,13 +39,13 @@ import java.util.Set;
 
 public class DisruptorExtension implements Extension
 {
-    private List<DisruptorObserverEntry> disruptorObserverEntries = new ArrayList<DisruptorObserverEntry>();
+    private List<ObserverEntry> disruptorObserverEntries = new ArrayList<ObserverEntry>();
 
     private Set<Annotation> defaultQualifier = new HashSet<Annotation>() {{
         add(new DefaultLiteral());
     }};
 
-    protected void collectDisruptorConfig(@Observes ProcessBean<?> pb, BeanManager beanManager)
+    protected void processAsyncEventSourcesAndTarges(@Observes ProcessBean<?> pb, BeanManager beanManager)
     {
         List<Method> foundMethods = new ArrayList<Method>(); //fallback
         Collections.addAll(foundMethods, pb.getBean().getBeanClass().getDeclaredMethods());
@@ -92,7 +93,7 @@ public class DisruptorExtension implements Extension
                         qualifiers.add(new DefaultLiteral());
                     }
                     int eventClassAndQualifierHashCode = new BeanCacheKey(eventClass, qualifiers.toArray(new Annotation[qualifiers.size()])).hashCode();
-                    disruptorObserverEntries.add(new DisruptorObserverEntry(beanManager, pb.getBean(), method, eventClassAndQualifierHashCode));
+                    disruptorObserverEntries.add(new ObserverEntry(beanManager, pb.getBean(), method, eventClassAndQualifierHashCode));
                 }
             }
         }
@@ -133,10 +134,10 @@ public class DisruptorExtension implements Extension
         }
     }
 
-    public List<DisruptorObserverEntry> getDisruptorObserver(Integer eventClassAndQualifierHashCode)
+    public List<ObserverEntry> getDisruptorObserver(Integer eventClassAndQualifierHashCode)
     {
-        List<DisruptorObserverEntry> result = new ArrayList<DisruptorObserverEntry>();
-        for (DisruptorObserverEntry entry : this.disruptorObserverEntries)
+        List<ObserverEntry> result = new ArrayList<ObserverEntry>();
+        for (ObserverEntry entry : this.disruptorObserverEntries)
         {
             if (entry.isEntryFor(eventClassAndQualifierHashCode))
             {

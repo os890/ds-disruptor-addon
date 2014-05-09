@@ -16,19 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.ds.addon.async.event.impl;
+package org.os890.ee.observer.async.disruptor;
 
-class DisruptorEventSlot<E>
+import org.os890.ds.addon.async.event.api.ObservesAsynchronous;
+
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class DisruptorBasedEventObserver2
 {
-    private E event;
-
-    E getEvent()
+    public void onEvent2(@ObservesAsynchronous DemoDisruptorEvent event)
     {
-        return event;
-    }
-
-    void setEvent(E event)
-    {
-        this.event = event;
+        event.touch2();
     }
 }

@@ -24,6 +24,7 @@ import org.apache.deltaspike.core.api.literal.DefaultLiteral;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 import org.os890.ds.addon.async.event.api.config.AsynchronousEventConfig;
+import org.os890.ds.addon.async.event.impl.util.BeanCacheKey;
 
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
@@ -78,11 +79,11 @@ class AsynchronousEventProxy implements AsynchronousEvent, Serializable
     {
         init(null);
 
-        RingBuffer<DisruptorEventSlot> ringBuffer = ringBufferHolder.getRingBuffer();
+        RingBuffer<EventSlot> ringBuffer = ringBufferHolder.getRingBuffer();
         long sequence = ringBuffer.next();
         try
         {
-            DisruptorEventSlot slot = ringBuffer.get(sequence);
+            EventSlot slot = ringBuffer.get(sequence);
             slot.setEvent(event);
         }
         finally //try/finally approach required by disruptor
@@ -111,7 +112,7 @@ class AsynchronousEventProxy implements AsynchronousEvent, Serializable
             asynchronousEventProducer = BeanProvider.getContextualReference(AsynchronousEventProducer.class);
         }
         ConcurrentMap<Integer, RingBufferHolder> disruptorEntries = asynchronousEventProducer.getDisruptorEntries();
-        List<DisruptorObserverEntry> disruptorObserverEntries = asynchronousEventProducer.getDisruptorExtension().getDisruptorObserver(this.eventClassAndQualifierHashCode);
+        List<ObserverEntry> disruptorObserverEntries = asynchronousEventProducer.getDisruptorExtension().getDisruptorObserver(this.eventClassAndQualifierHashCode);
         ContextControl contextControl = asynchronousEventProducer.getContextControl();
         this.ringBufferHolder = disruptorEntries.get(this.eventClassAndQualifierHashCode);
 
@@ -119,11 +120,11 @@ class AsynchronousEventProxy implements AsynchronousEvent, Serializable
         {
             AsynchronousEventConfig config = BeanProvider.getContextualReference(AsynchronousEventConfig.class);
 
-            SlotEventHandler<DisruptorEventSlot>[] slotEventHandlers = new SlotEventHandler[disruptorObserverEntries.size()];
+            EventSlotHandler<EventSlot>[] eventSlotHandlers = new EventSlotHandler[disruptorObserverEntries.size()];
 
             for (int i = 0; i < disruptorObserverEntries.size(); i++)
             {
-                slotEventHandlers[i] = new SlotEventHandler(disruptorObserverEntries.get(i));
+                eventSlotHandlers[i] = new EventSlotHandler(disruptorObserverEntries.get(i));
             }
 
             ringBufferHolder = new RingBufferHolder(
@@ -132,7 +133,7 @@ class AsynchronousEventProxy implements AsynchronousEvent, Serializable
                     config.getProducerType(),
                     config.getWaitStrategy(),
                     contextControl,
-                    slotEventHandlers);
+                    eventSlotHandlers);
             //TODO init
             RingBufferHolder existingRingBufferHolder = disruptorEntries.putIfAbsent(this.eventClassAndQualifierHashCode, ringBufferHolder);
             if (existingRingBufferHolder != null)

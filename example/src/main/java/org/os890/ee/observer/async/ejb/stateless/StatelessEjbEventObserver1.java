@@ -16,11 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.ds.addon.async.event.api;
+package org.os890.ee.observer.async.ejb.stateless;
 
-import java.io.Serializable;
+import javax.ejb.Asynchronous;
+import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
 
-public interface AsynchronousEvent<E> extends Serializable
+@Stateless
+public class StatelessEjbEventObserver1
 {
-    void fire(E event);
+    @Asynchronous
+    public void onEvent1(@Observes DemoStatelessEjbEvent event)
+    {
+        event.touch1();
+    }
 }

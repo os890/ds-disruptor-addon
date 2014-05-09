@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.ds.addon.async.event.impl;
+package org.os890.ds.addon.async.event.impl.util;
 
 import javax.enterprise.util.Nonbinding;
 import java.lang.annotation.Annotation;

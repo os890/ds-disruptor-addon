@@ -16,11 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.ds.addon.async.event.api;
+package org.os890.ee.observer.cdi;
 
-import java.io.Serializable;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
 
-public interface AsynchronousEvent<E> extends Serializable
+@ApplicationScoped
+public class CdiEventObserver1
 {
-    void fire(E event);
+    public void onEvent1(@Observes DemoCdiEvent event)
+    {
+        event.touch1();
+    }
 }

@@ -16,11 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.ds.addon.async.event.api;
+package org.os890.ee.observer.async.disruptor;
 
-import java.io.Serializable;
+import org.os890.ee.AbstractCountEvent;
 
-public interface AsynchronousEvent<E> extends Serializable
+public class DemoDisruptorEvent extends AbstractCountEvent
 {
-    void fire(E event);
 }

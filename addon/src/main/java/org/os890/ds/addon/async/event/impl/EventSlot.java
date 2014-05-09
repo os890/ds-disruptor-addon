@@ -16,11 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.ds.addon.async.event.api;
+package org.os890.ds.addon.async.event.impl;
 
-import java.io.Serializable;
-
-public interface AsynchronousEvent<E> extends Serializable
+class EventSlot<E>
 {
-    void fire(E event);
+    private E event;
+
+    E getEvent()
+    {
+        return event;
+    }
+
+    void setEvent(E event)
+    {
+        this.event = event;
+    }
 }

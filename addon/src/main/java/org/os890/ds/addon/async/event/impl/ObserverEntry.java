@@ -20,11 +20,13 @@ package org.os890.ds.addon.async.event.impl;
 
 import org.apache.deltaspike.core.util.ExceptionUtils;
 
+import javax.enterprise.context.Dependent;
+import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import java.lang.reflect.Method;
 
-class DisruptorObserverEntry<T>
+class ObserverEntry<T>
 {
     private final int eventClassAndQualifierHashCode;
     private final Bean<?> bean;
@@ -32,10 +34,10 @@ class DisruptorObserverEntry<T>
     private final BeanManager beanManager;
     private final Object observerContextualReference;
 
-    DisruptorObserverEntry(BeanManager beanManager,
-                           Bean<?> bean,
-                           Method observerMethod,
-                           int eventClassAndQualifierHashCode)
+    ObserverEntry(BeanManager beanManager,
+                  Bean<?> bean,
+                  Method observerMethod,
+                  int eventClassAndQualifierHashCode)
     {
         this.observerMethod = observerMethod;
         this.beanManager = beanManager;
@@ -59,13 +61,20 @@ class DisruptorObserverEntry<T>
         //TODO cache it
 
         final Object currentObserverContextualReference;
+        CreationalContext<Object> creationalContext = null;
+
         if (observerContextualReference != null)
         {
             currentObserverContextualReference = observerContextualReference;
         }
         else
         {
-            currentObserverContextualReference = beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(bean));
+            creationalContext = beanManager.createCreationalContext((Bean<Object>)bean);
+            currentObserverContextualReference = beanManager.getReference(bean, bean.getBeanClass(), creationalContext);
+            if (!Dependent.class.isAssignableFrom(bean.getScope()))
+            {
+                creationalContext = null;
+            }
         }
 
         try
@@ -75,6 +84,13 @@ class DisruptorObserverEntry<T>
         catch (Exception e)
         {
             throw ExceptionUtils.throwAsRuntimeException(e);
+        }
+        finally
+        {
+            if (creationalContext != null)
+            {
+                ((Bean<Object>)bean).destroy(currentObserverContextualReference, creationalContext);
+            }
         }
     }
 

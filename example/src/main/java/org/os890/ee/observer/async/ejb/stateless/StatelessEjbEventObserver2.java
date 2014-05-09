@@ -16,22 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.os890.ds.addon.async.event.impl;
+package org.os890.ee.observer.async.ejb.stateless;
 
-import com.lmax.disruptor.EventHandler;
+import javax.ejb.Asynchronous;
+import javax.ejb.Stateless;
+import javax.enterprise.event.Observes;
 
-class SlotEventHandler<E> implements EventHandler<DisruptorEventSlot<E>>
+@Stateless
+public class StatelessEjbEventObserver2
 {
-    private final DisruptorObserverEntry disruptorObserverEntry;
-
-    SlotEventHandler(DisruptorObserverEntry disruptorObserverEntry)
+    @Asynchronous
+    public void onEvent2(@Observes DemoStatelessEjbEvent event)
     {
-        this.disruptorObserverEntry = disruptorObserverEntry;
-    }
-
-    @Override
-    public void onEvent(DisruptorEventSlot<E> event, long sequence, boolean endOfBatch) throws Exception
-    {
-        disruptorObserverEntry.dispatch(event.getEvent()); //TODO sequence, endOfBatch
+        event.touch2();
     }
 }
