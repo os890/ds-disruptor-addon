@@ -42,7 +42,7 @@ import java.io.Serializable;
 @WindowScoped
 public class EventDispatcher implements Serializable
 {
-    private int eventCount = 1000000;
+    private int eventCount = 100000;
     private int sleepTime = 200;
     private int ejbSleepTime = 5000;
 
