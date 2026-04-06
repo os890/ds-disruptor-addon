@@ -16,14 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.async.event.impl;
 
 import org.apache.deltaspike.core.util.ExceptionUtils;
 
-import javax.enterprise.context.Dependent;
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
 import java.lang.reflect.Method;
 
 class ObserverEntry<T>
@@ -32,7 +33,8 @@ class ObserverEntry<T>
     private final Bean<?> bean;
     private final Method observerMethod;
     private final BeanManager beanManager;
-    private final Object observerContextualReference;
+    private final boolean normalScope;
+    private volatile Object observerContextualReference;
 
     ObserverEntry(BeanManager beanManager,
                   Bean<?> bean,
@@ -42,17 +44,8 @@ class ObserverEntry<T>
         this.observerMethod = observerMethod;
         this.beanManager = beanManager;
         this.eventClassAndQualifierHashCode = eventClassAndQualifierHashCode;
-
-        if (beanManager.isNormalScope(bean.getScope()))
-        {
-            this.observerContextualReference = beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(bean));
-            this.bean = null;
-        }
-        else
-        {
-            this.observerContextualReference = null;
-            this.bean = bean;
-        }
+        this.normalScope = beanManager.isNormalScope(bean.getScope());
+        this.bean = bean;
     }
 
     void dispatch(T event)
@@ -63,8 +56,19 @@ class ObserverEntry<T>
         final Object currentObserverContextualReference;
         CreationalContext<Object> creationalContext = null;
 
-        if (observerContextualReference != null)
+        if (normalScope)
         {
+            //lazy init - getReference is not allowed before AfterDeploymentValidation (CDI 4.x)
+            if (observerContextualReference == null)
+            {
+                synchronized (this)
+                {
+                    if (observerContextualReference == null)
+                    {
+                        observerContextualReference = beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(bean));
+                    }
+                }
+            }
             currentObserverContextualReference = observerContextualReference;
         }
         else

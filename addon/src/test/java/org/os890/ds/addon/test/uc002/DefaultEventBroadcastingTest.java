@@ -16,17 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.test.uc002;
 
-import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.os890.cdi.addon.dynamictestbean.EnableTestBeans;
 import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
-@RunWith(CdiTestRunner.class)
+@EnableTestBeans
 public class DefaultEventBroadcastingTest
 {
     @Inject
@@ -44,6 +44,6 @@ public class DefaultEventBroadcastingTest
 
         Thread.sleep(50);
 
-        Assert.assertEquals(eventCount * 2 /*2 event-handler*/, event.getTouchCount());
+        Assertions.assertEquals(eventCount * 2 /*2 event-handler*/, event.getTouchCount());
     }
 }

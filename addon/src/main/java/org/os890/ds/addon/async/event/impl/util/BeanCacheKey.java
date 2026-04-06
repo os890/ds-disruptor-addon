@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.async.event.impl.util;
 
-import javax.enterprise.util.Nonbinding;
+import jakarta.enterprise.util.Nonbinding;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -26,7 +27,11 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Comparator;
 
-//class from OWB
+/**
+ * Cache key for CDI bean lookups, based on the bean class and its qualifier annotations.
+ * Qualifier comparison ignores {@link Nonbinding} members.
+ * Originally derived from Apache OpenWebBeans.
+ */
 public class BeanCacheKey
 {
     private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
@@ -37,6 +42,12 @@ public class BeanCacheKey
     private final Annotation qualifiers[];
     private final int hashCode;
 
+    /**
+     * Constructs a cache key for the given bean class and qualifier annotations.
+     *
+     * @param beanClass  the bean class
+     * @param qualifiers the qualifier annotations
+     */
     public BeanCacheKey(Class beanClass, Annotation... qualifiers)
     {
         this.beanClass = beanClass;
@@ -64,11 +75,21 @@ public class BeanCacheKey
         hashCode = computeHashCode();
     }
 
+    /**
+     * Returns the bean class for this cache key.
+     *
+     * @return the bean class
+     */
     public Class getBeanClass()
     {
         return this.beanClass;
     }
 
+    /**
+     * Returns the qualifier annotations for this cache key.
+     *
+     * @return the qualifier annotations
+     */
     public Annotation[] getQualifiers()
     {
         if (this.qualifiers != null)
@@ -179,7 +200,7 @@ public class BeanCacheKey
     }
 
     /**
-     * Calculate the hashCode() of a qualifier, which ignores {@link javax.enterprise.util.Nonbinding} members.
+     * Calculate the hashCode() of a qualifier, which ignores {@link jakarta.enterprise.util.Nonbinding} members.
      */
     private int getQualifierHashCode(Annotation a)
     {
@@ -272,7 +293,7 @@ public class BeanCacheKey
     }
 
     /**
-     * Implements the equals() method for qualifiers, which ignores {@link javax.enterprise.util.Nonbinding} members.
+     * Implements the equals() method for qualifiers, which ignores {@link jakarta.enterprise.util.Nonbinding} members.
      */
     private boolean qualifierEquals(Annotation qualifier1, Annotation qualifier2)
     {

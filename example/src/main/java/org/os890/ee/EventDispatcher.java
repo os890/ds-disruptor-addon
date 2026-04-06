@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
 */
+
 package org.os890.ee;
 
 import org.apache.deltaspike.core.api.scope.WindowScoped;
@@ -33,9 +34,9 @@ import org.os890.ee.observer.cdi.CdiEventObserver1;
 import org.os890.ee.observer.cdi.CdiEventObserver2;
 import org.os890.ee.observer.cdi.DemoCdiEvent;
 
-import javax.enterprise.event.Event;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.enterprise.event.Event;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.Serializable;
 
 @Named

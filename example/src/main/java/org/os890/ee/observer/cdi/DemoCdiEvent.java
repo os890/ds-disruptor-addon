@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ee.observer.cdi;
 
 import org.os890.ee.AbstractCountEvent;

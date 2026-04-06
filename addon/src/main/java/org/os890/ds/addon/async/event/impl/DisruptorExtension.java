@@ -16,17 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.async.event.impl;
 
-import org.apache.deltaspike.core.api.literal.DefaultLiteral;
 import org.apache.deltaspike.core.util.metadata.builder.ImmutableInjectionPoint;
 import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 import org.os890.ds.addon.async.event.api.ObservesAsynchronous;
 import org.os890.ds.addon.async.event.impl.util.BeanCacheKey;
 
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Default;
-import javax.enterprise.inject.spi.*;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.spi.AnnotatedField;
+import jakarta.enterprise.inject.spi.AnnotatedMethod;
+import jakarta.enterprise.inject.spi.AnnotatedType;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.Extension;
+import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.enterprise.inject.spi.ProcessBean;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -37,12 +43,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * CDI extension that discovers methods annotated with {@link ObservesAsynchronous}
+ * during bean processing and registers them as Disruptor-based asynchronous observers.
+ */
 public class DisruptorExtension implements Extension
 {
     private List<ObserverEntry> disruptorObserverEntries = new ArrayList<ObserverEntry>();
 
     private Set<Annotation> defaultQualifier = new HashSet<Annotation>() {{
-        add(new DefaultLiteral());
+        add(Default.Literal.INSTANCE);
     }};
 
     protected void processAsyncEventSourcesAndTarges(@Observes ProcessBean<?> pb, BeanManager beanManager)
@@ -90,7 +100,7 @@ public class DisruptorExtension implements Extension
                     Class eventClass = method.getParameterTypes()[0];
                     if (qualifiers.isEmpty())
                     {
-                        qualifiers.add(new DefaultLiteral());
+                        qualifiers.add(Default.Literal.INSTANCE);
                     }
                     int eventClassAndQualifierHashCode = new BeanCacheKey(eventClass, qualifiers.toArray(new Annotation[qualifiers.size()])).hashCode();
                     disruptorObserverEntries.add(new ObserverEntry(beanManager, pb.getBean(), method, eventClassAndQualifierHashCode));
@@ -134,6 +144,12 @@ public class DisruptorExtension implements Extension
         }
     }
 
+    /**
+     * Returns the list of observer entries matching the given event class and qualifier hash code.
+     *
+     * @param eventClassAndQualifierHashCode the combined hash code of the event class and its qualifiers
+     * @return the matching observer entries, never {@code null}
+     */
     public List<ObserverEntry> getDisruptorObserver(Integer eventClassAndQualifierHashCode)
     {
         List<ObserverEntry> result = new ArrayList<ObserverEntry>();

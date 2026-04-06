@@ -16,15 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.test.uc004;
 
-import javax.inject.Qualifier;
+import jakarta.inject.Qualifier;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.PARAMETER;
 
 @Target({PARAMETER, FIELD})
 @Retention(value = RetentionPolicy.RUNTIME)

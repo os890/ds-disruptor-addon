@@ -16,14 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.async.event.impl;
 
-import com.lmax.disruptor.*;
+import com.lmax.disruptor.AlertException;
+import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventProcessor;
+import com.lmax.disruptor.LifecycleAware;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.Sequence;
+import com.lmax.disruptor.SequenceBarrier;
+import com.lmax.disruptor.Sequencer;
+import com.lmax.disruptor.TimeoutException;
 import org.apache.deltaspike.cdise.api.ContextControl;
 import org.apache.deltaspike.core.util.ExceptionUtils;
 
-import javax.enterprise.context.RequestScoped;
-import javax.enterprise.context.SessionScoped;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.SessionScoped;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 //based on BatchEventProcessor

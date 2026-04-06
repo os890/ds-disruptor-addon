@@ -16,37 +16,62 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.async.event.api.config;
 
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.dsl.ProducerType;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-//use e.g. @Specializes to provide a custom config
+/**
+ * Default configuration for the Disruptor-based asynchronous event system.
+ * Override with {@code @Specializes} to provide custom settings for ring buffer size,
+ * executor, producer type, or wait strategy.
+ */
 @ApplicationScoped
 public class AsynchronousEventConfig
 {
     private Executor executor = Executors.newCachedThreadPool();
 
+    /**
+     * Returns the size of the Disruptor ring buffer. Must be a power of two.
+     *
+     * @return the ring buffer size (default 4096)
+     */
     public int getRingBufferSize()
     {
         return 4096;
     }
 
+    /**
+     * Returns the executor used to run event processors.
+     *
+     * @return the executor instance (default cached thread pool)
+     */
     public Executor getExecutor()
     {
         return executor;
     }
 
+    /**
+     * Returns the Disruptor producer type.
+     *
+     * @return the producer type (default {@link ProducerType#MULTI})
+     */
     public ProducerType getProducerType()
     {
         return ProducerType.MULTI;
     }
 
+    /**
+     * Returns the wait strategy used by the Disruptor.
+     *
+     * @return the wait strategy (default {@link BlockingWaitStrategy})
+     */
     public WaitStrategy getWaitStrategy()
     {
         return new BlockingWaitStrategy();

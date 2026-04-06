@@ -16,11 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.async.event.api;
 
 import java.io.Serializable;
 
+/**
+ * Represents an asynchronous event that can be fired via a LMAX Disruptor-backed ring buffer.
+ * Inject this interface to dispatch events to methods annotated with {@link ObservesAsynchronous}.
+ *
+ * @param <E> the event payload type
+ */
 public interface AsynchronousEvent<E> extends Serializable
 {
+    /**
+     * Publishes the given event to all registered asynchronous observers.
+     *
+     * @param event the event payload to dispatch
+     */
     void fire(E event);
 }

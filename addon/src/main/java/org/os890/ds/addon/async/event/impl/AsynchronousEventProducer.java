@@ -16,21 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.async.event.impl;
 
 import org.apache.deltaspike.cdise.api.ContextControl;
 import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.Dependent;
-import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Produces;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.InjectionPoint;
-import javax.inject.Inject;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.inject.Inject;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * CDI producer that creates {@link AsynchronousEvent} proxy instances backed by
+ * LMAX Disruptor ring buffers. Each injection point receives a proxy that routes
+ * events to the appropriate asynchronous observers.
+ */
 @RequestScoped
 public class AsynchronousEventProducer
 {

@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ee.observer.async.ejb.stateless;
 
-import javax.ejb.Asynchronous;
-import javax.ejb.Stateless;
-import javax.enterprise.event.Observes;
+import jakarta.ejb.Asynchronous;
+import jakarta.ejb.Stateless;
+import jakarta.enterprise.event.Observes;
 
 @Stateless
 public class StatelessEjbEventObserver1

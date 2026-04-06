@@ -12,3 +12,10 @@ target
 atlassian-ide-plugin.xml
 .sonar-ide.properties
 *.patch
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*~
+release.properties
+pom.xml.releaseBackup

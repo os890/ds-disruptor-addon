@@ -16,18 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.async.event.impl;
 
 import com.lmax.disruptor.RingBuffer;
 import org.apache.deltaspike.cdise.api.ContextControl;
-import org.apache.deltaspike.core.api.literal.DefaultLiteral;
+import jakarta.enterprise.inject.Default;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 import org.os890.ds.addon.async.event.api.config.AsynchronousEventConfig;
 import org.os890.ds.addon.async.event.impl.util.BeanCacheKey;
 
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.InjectionPoint;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.InjectionPoint;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -63,7 +64,7 @@ class AsynchronousEventProxy implements AsynchronousEvent, Serializable
 
             if (qualifiers.isEmpty())
             {
-                qualifiers.add(new DefaultLiteral());
+                qualifiers.add(Default.Literal.INSTANCE);
             }
             eventClassAndQualifierHashCode = new BeanCacheKey(eventClass, qualifiers.toArray(new Annotation[qualifiers.size()])).hashCode();
         }

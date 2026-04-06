@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ee.observer.async.ejb.stateful;
 
-import javax.ejb.Asynchronous;
-import javax.ejb.Stateful;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
+import jakarta.ejb.Asynchronous;
+import jakarta.ejb.Stateful;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
 @Stateful
 @ApplicationScoped

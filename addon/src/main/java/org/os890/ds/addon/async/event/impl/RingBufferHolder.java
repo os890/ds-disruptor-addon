@@ -16,9 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.async.event.impl;
 
-import com.lmax.disruptor.*;
+import com.lmax.disruptor.EventFactory;
+import com.lmax.disruptor.EventProcessor;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.SequenceBarrier;
+import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.deltaspike.cdise.api.ContextControl;

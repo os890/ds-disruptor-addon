@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.test.uc005;
 
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -23,17 +24,16 @@ import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
-import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.os890.cdi.addon.dynamictestbean.EnableTestBeans;
 import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-@RunWith(CdiTestRunner.class)
+@EnableTestBeans
 public class SimpleBenchmarkTest
 {
     private static final Logger LOG = Logger.getLogger(SimpleBenchmarkTest.class.getName());
@@ -61,7 +61,7 @@ public class SimpleBenchmarkTest
         if (observerProcessingTime > expectedMax)
         {
             LOG.warning(logMessage);
-            Assert.fail();
+            Assertions.fail();
         }
         else
         {

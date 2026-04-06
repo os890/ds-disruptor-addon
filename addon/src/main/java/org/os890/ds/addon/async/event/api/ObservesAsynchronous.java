@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.async.event.api;
 
 import java.lang.annotation.Documented;
@@ -25,6 +26,11 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+/**
+ * Marks a method parameter as an asynchronous event observer.
+ * Methods annotated with this qualifier receive events dispatched
+ * through the LMAX Disruptor ring buffer via {@link AsynchronousEvent#fire(Object)}.
+ */
 @Target(PARAMETER)
 @Retention(RUNTIME)
 @Documented

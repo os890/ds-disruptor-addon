@@ -16,16 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.test.uc004;
 
-import org.apache.deltaspike.testcontrol.api.junit.CdiTestRunner;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.os890.cdi.addon.dynamictestbean.EnableTestBeans;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
-@RunWith(CdiTestRunner.class)
+@EnableTestBeans
 public class EventBroadcastingWithSimpleQualifierTest
 {
     @Inject
@@ -43,7 +43,7 @@ public class EventBroadcastingWithSimpleQualifierTest
 
         Thread.sleep(50);
 
-        Assert.assertEquals(eventCount, event.getTouchCount());
+        Assertions.assertEquals(eventCount, event.getTouchCount());
     }
 
     @Test
@@ -58,6 +58,6 @@ public class EventBroadcastingWithSimpleQualifierTest
 
         Thread.sleep(50);
 
-        Assert.assertEquals(eventCount * 2, event.getTouchCount());
+        Assertions.assertEquals(eventCount * 2, event.getTouchCount());
     }
 }

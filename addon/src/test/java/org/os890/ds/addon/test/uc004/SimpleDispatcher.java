@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.os890.ds.addon.test.uc004;
 
 import org.os890.ds.addon.async.event.api.AsynchronousEvent;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 //needed due to qualifier trick
 public class SimpleDispatcher
